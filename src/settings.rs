@@ -70,6 +70,7 @@ pub struct Cmdline {
     pub dest_profile: String,
 
     /// Proxy URL
+    #[structopt(name = "proxy", long)]
     pub proxy: Option<String>,
 }
 
