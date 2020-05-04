@@ -80,12 +80,13 @@ impl Cmdline {
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cmdline = Cmdline::parse();
 
     let sts_client = build_sts_client(&cmdline)?;
     let assume_role_request = build_assume_role_request(&cmdline);
-    let result = sts_client.assume_role(assume_role_request).sync()?;
+    let result = sts_client.assume_role(assume_role_request).await?;
 
     let credentials = result
         .credentials
@@ -147,6 +148,7 @@ fn build_assume_role_request(cmdline: &Cmdline) -> AssumeRoleRequest {
         role_session_name: cmdline.session_name.clone(),
         serial_number: cmdline.mfa_serial_number.clone(),
         token_code: cmdline.mfa_token.clone(),
+        ..AssumeRoleRequest::default()
     }
 }
 
