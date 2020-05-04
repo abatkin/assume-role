@@ -9,6 +9,9 @@ anyhow = "1"
 structopt = "0.3.14"
 directories = "2.0.2"
 tokio = "0.2"
+hyper-proxy = { version = "0.6.0", features = ["rustls"], default-features = false }
+hyper = "0.13.1"
+hyper-rustls = "0.20"
 rusoto_core = { version = "0.43.0", features = ["rustls"], default-features = false }
 rusoto_sts = { version = "0.43.0", features = ["rustls"], default-features = false }
 rust-ini = { version = "0.14.0", features = ["preserve_order"] }

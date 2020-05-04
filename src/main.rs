@@ -1,4 +1,9 @@
 use anyhow::{Context, Result};
+use hyper::client::connect::dns::GaiResolver;
+use hyper::client::HttpConnector;
+use hyper::Uri;
+use hyper_proxy::{Intercept, Proxy, ProxyConnector};
+use hyper_rustls::HttpsConnector;
 use rusoto_core::credential::{ChainProvider, ProfileProvider};
 use rusoto_core::{Client, HttpClient};
 use rusoto_sts::{AssumeRoleRequest, PolicyDescriptorType, Sts, StsClient};
@@ -34,11 +39,33 @@ fn build_sts_client(cmdline: &Cmdline) -> Result<StsClient> {
     let credential_provider =
         build_credential_provider(&cmdline.profile, &cmdline.credential_file)?;
 
-    let http_client = HttpClient::new().context("failed to create request dispatcher")?;
+    let connector = build_connector(&cmdline.proxy)?;
+    let http_client = HttpClient::from_connector(connector);
     let client = Client::new_with(credential_provider, http_client);
     let sts_client = StsClient::new_with_client(client, cmdline.region.clone());
 
     Ok(sts_client)
+}
+
+fn build_connector(
+    proxy: &Option<String>,
+) -> Result<ProxyConnector<HttpsConnector<HttpConnector<GaiResolver>>>> {
+    let https = HttpsConnector::new();
+    if let Some(url) = proxy {
+        if url == "none" {
+            Ok(ProxyConnector::new(https)?)
+        } else {
+            let uri = url
+                .parse::<Uri>()
+                .with_context(|| format!("invalid proxy URL {}", url))?;
+            Ok(ProxyConnector::from_proxy(
+                https,
+                Proxy::new(Intercept::All, uri),
+            )?)
+        }
+    } else {
+        Ok(ProxyConnector::new(https)?)
+    }
 }
 
 fn build_credential_provider(

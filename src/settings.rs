@@ -68,6 +68,9 @@ pub struct Cmdline {
     /// Profile to save new credentials
     #[structopt(name = "dest-profile", long, default_value = "default")]
     pub dest_profile: String,
+
+    /// Proxy URL
+    pub proxy: Option<String>,
 }
 
 impl Cmdline {
