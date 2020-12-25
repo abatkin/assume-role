@@ -36,6 +36,7 @@ OPTIONS:
         --policy <policy>...                       ARN(s) of IAM managed policies to use as managed session policies
         --policy-json <policy-json>                Inline session policy JSON
     -p, --profile <profile>                        AWS Profile to use when calling assume-role
+        --proxy <proxy>                            Proxy URL
         --region <region>
             AWS Region for STS endpoint [env: AWS_DEFAULT_REGION=]  [default: us-east-1]
 
