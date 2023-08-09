@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use anyhow::{Context, Result};
+use aws_sdk_sts::types::Credentials;
 use ini::Ini;
-use rusoto_sts::Credentials;
 
 pub struct CredentialFile {
     ini: Ini,
@@ -20,9 +20,9 @@ impl CredentialFile {
         self.ini.delete(Some(profile));
         self.ini
             .with_section(Some(profile))
-            .set("aws_access_key_id", &credentials.access_key_id)
-            .set("aws_secret_access_key", &credentials.secret_access_key)
-            .set("aws_session_token", &credentials.session_token);
+            .set("aws_access_key_id", credentials.access_key_id().unwrap())
+            .set("aws_secret_access_key", credentials.secret_access_key().unwrap())
+            .set("aws_session_token", credentials.session_token().unwrap());
     }
 
     pub fn save<P: AsRef<Path>>(&self, filename: P) -> Result<()> {

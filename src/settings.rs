@@ -1,7 +1,7 @@
-use anyhow::{Context, Result};
-use rusoto_core::Region;
 use std::path::PathBuf;
 use std::str::FromStr;
+
+use anyhow::{Context, Result};
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
@@ -16,22 +16,16 @@ pub struct Cmdline {
     #[structopt(name = "profile", short = "p", long)]
     pub profile: Option<String>,
 
-    /// Credential file to load credentials from when calling assume-role
-    #[structopt(name = "file", long, short = "f")]
-    pub credential_file: Option<String>,
-
     /// AWS Region for STS endpoint
     #[structopt(
         name = "region",
         long,
-        env = "AWS_DEFAULT_REGION",
-        default_value = "us-east-1"
     )]
-    pub region: Region,
+    pub region: Option<String>,
 
     /// Lifetime in seconds for temporary credentials (AWS default is 3600 = 1 hour)
     #[structopt(name = "duration", long)]
-    pub duration: Option<u16>,
+    pub duration: Option<i32>,
 
     /// External ID to pass to assume-role
     #[structopt(name = "external-id", long)]
@@ -62,8 +56,8 @@ pub struct Cmdline {
     pub mfa_token: Option<String>,
 
     /// Credential file to save new credentials to
-    #[structopt(name = "dest-file", long, env = "AWS_SHARED_CREDENTIALS_FILE")]
-    pub dest_credential_file: Option<String>,
+    #[structopt(name = "credentials-file", long, env = "AWS_SHARED_CREDENTIALS_FILE")]
+    pub credential_file: Option<String>,
 
     /// Profile to save new credentials
     #[structopt(name = "dest-profile", long, default_value = "default")]
@@ -80,7 +74,7 @@ impl Cmdline {
     }
 
     pub fn determine_credential_file(&self) -> Result<PathBuf> {
-        Ok(match &self.dest_credential_file {
+        Ok(match &self.credential_file {
             Some(filename) => PathBuf::from_str(filename)
                 .with_context(|| format!("bad credential file path: {}", filename))?,
             None => {
