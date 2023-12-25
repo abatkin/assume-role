@@ -20,9 +20,9 @@ impl CredentialFile {
         self.ini.delete(Some(profile));
         self.ini
             .with_section(Some(profile))
-            .set("aws_access_key_id", credentials.access_key_id().unwrap())
-            .set("aws_secret_access_key", credentials.secret_access_key().unwrap())
-            .set("aws_session_token", credentials.session_token().unwrap());
+            .set("aws_access_key_id", credentials.access_key_id())
+            .set("aws_secret_access_key", credentials.secret_access_key())
+            .set("aws_session_token", credentials.session_token());
     }
 
     pub fn save<P: AsRef<Path>>(&self, filename: P) -> Result<()> {

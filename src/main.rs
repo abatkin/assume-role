@@ -1,10 +1,15 @@
 use anyhow::{Context, Result};
+use aws_config::BehaviorVersion;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_sts::Client;
 use aws_sdk_sts::config::Region;
 use aws_sdk_sts::operation::assume_role::builders::AssumeRoleFluentBuilder;
 use aws_sdk_sts::types::PolicyDescriptorType;
+use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
 use hyper::client::HttpConnector;
+// use aws_smithy_runtime_api::client::behavior_version::BehaviorVersion;
+// use aws_smithy_runtime_api::client::http::HttpConnector;
+
 use hyper::Uri;
 use hyper_proxy::{Intercept, Proxy, ProxyConnector};
 
@@ -36,10 +41,10 @@ async fn main() -> Result<()> {
 }
 
 async fn build_sts_client(cmdline: &Cmdline) -> Result<Client> {
-    let region_provider = RegionProviderChain::first_try(cmdline.region.clone().map(|r| Region::new(r)))
+    let region_provider = RegionProviderChain::first_try(cmdline.region.clone().map(Region::new))
         .or_default_provider()
         .or_else(Region::new("us-east-1"));
-    let mut config_loader = aws_config::from_env().region(region_provider);
+    let mut config_loader = aws_config::defaults(BehaviorVersion::latest()).region(region_provider);
 
     if let Some(profile_name) = &cmdline.profile {
         config_loader = config_loader.profile_name(profile_name);
@@ -52,10 +57,8 @@ async fn build_sts_client(cmdline: &Cmdline) -> Result<Client> {
         let proxy = Proxy::new(Intercept::All, Uri::try_from(proxy_uri).context("invalid proxy_uri")?);
         let connector = HttpConnector::new();
         let proxy_connector = ProxyConnector::from_proxy(connector, proxy).unwrap();
-        let hyper_client = aws_smithy_client::hyper_ext::Adapter::builder()
-            .build(proxy_connector);
-
-        sts_config_builder = sts_config_builder.http_connector(hyper_client);
+        let http_client = HyperClientBuilder::new().build(proxy_connector);
+        sts_config_builder = sts_config_builder.http_client(http_client);
     }
     let sts_config = sts_config_builder.build();
 
@@ -95,5 +98,5 @@ fn build_assume_role_request(client: Client, cmdline: &Cmdline) -> AssumeRoleFlu
 
     builder = builder.role_arn(&cmdline.role_arn);
     builder = builder.role_session_name(&cmdline.session_name);
-    return builder;
+    builder
 }

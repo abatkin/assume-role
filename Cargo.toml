@@ -1,17 +1,17 @@
 [package]
 name = "assume-role"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Adam Batkin <adam@batkin.net>"]
 edition = "2021"
 
 [dependencies]
 anyhow = "1"
-structopt = "0.3.14"
-aws-config = "0.56"
-aws-sdk-sts = "0.29"
-aws-smithy-client = { version = "0.56", features = ["client-hyper"] }
+structopt = "0.3"
+aws-config = "1"
+aws-sdk-sts = "1"
+aws-smithy-runtime = { version = "1", features = ["connector-hyper-0-14-x", "client"] }
 tokio = { version = "1", features = ["full"] }
 hyper = { version = "0.14", features = ["client"] }
 hyper-proxy = "0.9"
-directories = "2.0.2"
-rust-ini = { version = "0.14.0", features = ["preserve_order"] }
+directories = "5"
+rust-ini = { version = "0.20"}
