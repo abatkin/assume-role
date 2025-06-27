@@ -42,9 +42,14 @@ OPTIONS:
 
     -r, --role <role>                              ARN of role ot assume
     -s, --session-name <session-name>              Session name to pass to assume-role
+    -v, --verbose                                  Enable verbose output
     -V, --version                                  Prints version information
 ```
 Realistically, you need to pass `--role`, `--session-name` and you probably want `--dest-profile` (and possibly `--profile` or set `AWS_PROFILE`).
+
+When `--verbose` is supplied, the tool enables additional tracing which also
+prints the underlying HTTP requests made by the AWS SDK. This can help with
+debugging connection or authentication issues.
 
 
 
