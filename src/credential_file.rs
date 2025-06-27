@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use anyhow::{Context, Result};
+use std::io::ErrorKind;
 use aws_sdk_sts::types::Credentials;
 use ini::Ini;
 
@@ -11,8 +12,15 @@ pub struct CredentialFile {
 impl CredentialFile {
     pub fn load<P: AsRef<Path>>(filename: P) -> Result<CredentialFile> {
         let path = filename.as_ref();
-        let ini = Ini::load_from_file(path)
-            .with_context(|| format!("unable to load credential file {}", path.display()))?;
+        let ini = match Ini::load_from_file(path) {
+            Ok(ini) => ini,
+            Err(e) if e.kind() == ErrorKind::NotFound => Ini::new(),
+            Err(e) => {
+                return Err(e).with_context(|| {
+                    format!("unable to load credential file {}", path.display())
+                })
+            }
+        };
         Ok(CredentialFile { ini })
     }
 
@@ -30,5 +38,19 @@ impl CredentialFile {
         self.ini
             .write_to_file(path)
             .with_context(|| format!("unable to save credential file {}", path.display()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn load_missing_file_returns_empty() {
+        let tmp = std::env::temp_dir().join("assume_role_test_missing.ini");
+        let _ = fs::remove_file(&tmp);
+        let cred = CredentialFile::load(&tmp).expect("load should succeed");
+        assert!(cred.ini.section(None::<String>).is_none());
     }
 }
