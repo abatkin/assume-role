@@ -12,6 +12,7 @@ use hyper::client::HttpConnector;
 
 use hyper::Uri;
 use hyper_proxy::{Intercept, Proxy, ProxyConnector};
+use tracing_subscriber::EnvFilter;
 
 use crate::credential_file::CredentialFile;
 use crate::settings::Cmdline;
@@ -19,19 +20,37 @@ use crate::settings::Cmdline;
 mod credential_file;
 mod settings;
 
+macro_rules! vprintln {
+    ($cmdline:expr, $($arg:tt)*) => {
+        if $cmdline.verbose {
+            println!($($arg)*);
+        }
+    };
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let cmdline = Cmdline::parse();
+
+    if cmdline.verbose {
+        // Enable verbose tracing for AWS SDK HTTP traffic
+        tracing_subscriber::fmt()
+            .with_env_filter(EnvFilter::new("trace"))
+            .init();
+    }
+
+    vprintln!(&cmdline, "Assuming role {}", cmdline.role_arn);
 
     let sts_client = build_sts_client(&cmdline).await?;
     let assume_role_request = build_assume_role_request(sts_client, &cmdline);
     let result = assume_role_request.send().await.context("assume role failed")?;
 
+    let credential_filename = cmdline.determine_credential_file()?;
+    vprintln!(&cmdline, "Assume role succeeded, saving credentials to {}", credential_filename.display());
+
     let credentials = result
         .credentials()
         .with_context(|| "no credentials in response")?;
-
-    let credential_filename = cmdline.determine_credential_file()?;
 
     let mut credential_file = CredentialFile::load(&credential_filename)?;
     credential_file.set_credentials(&cmdline.dest_profile, credentials);

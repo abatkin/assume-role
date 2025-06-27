@@ -66,6 +66,10 @@ pub struct Cmdline {
     /// Proxy URL
     #[structopt(name = "proxy", long)]
     pub proxy: Option<String>,
+
+    /// Enable verbose output
+    #[structopt(short, long)]
+    pub verbose: bool,
 }
 
 impl Cmdline {
