@@ -53,10 +53,7 @@ async fn main() -> Result<()> {
         .with_context(|| "no credentials in response")?;
 
     if cmdline.credential_process {
-        let expiration = credentials
-            .expiration()
-            .map(|e| e.to_string())
-            .unwrap_or_default();
+        let expiration = credentials.expiration().to_string();
         let output = serde_json::json!({
             "Version": 1,
             "AccessKeyId": credentials.access_key_id(),
