@@ -18,7 +18,7 @@ assume-role 0.1.0
 Adam Batkin <adam@batkin.net>
 
 USAGE:
-    assume-role --role <role> --session-name <session-name>
+    assume-role --role <role> [--session-name <session-name>]
 
 OPTIONS:
         --dest-file <dest-file>
@@ -43,11 +43,11 @@ OPTIONS:
             AWS Region for STS endpoint [env: AWS_DEFAULT_REGION=]  [default: us-east-1]
 
     -r, --role <role>                              ARN of role ot assume
-    -s, --session-name <session-name>              Session name to pass to assume-role
+    -s, --session-name <session-name>              Session name to pass to assume-role [default: assume-role-<timestamp>]
     -v, --verbose                                  Enable verbose output
     -V, --version                                  Prints version information
 ```
-Realistically, you need to pass `--role`, `--session-name` and you probably want `--dest-profile` (and possibly `--profile` or set `AWS_PROFILE`).
+Realistically, you need to pass `--role` and you probably want `--dest-profile` (and possibly `--profile` or set `AWS_PROFILE`).
 
 When `--verbose` is supplied, the tool enables additional tracing which also
 prints the underlying HTTP requests made by the AWS SDK. This can help with
