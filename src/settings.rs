@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::{Context, Result};
+use std::time::{SystemTime, UNIX_EPOCH};
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
@@ -42,7 +43,7 @@ pub struct Cmdline {
 
     /// Session name to pass to assume-role
     #[structopt(name = "session-name", long, short = "s")]
-    pub session_name: String,
+    pub session_name: Option<String>,
 
     /// MFA device serial number
     #[structopt(name = "mfa-serial-number", long)]
@@ -80,6 +81,19 @@ pub struct Cmdline {
 impl Cmdline {
     pub fn parse() -> Cmdline {
         Cmdline::from_args()
+    }
+
+    pub fn session_name(&self) -> String {
+        match &self.session_name {
+            Some(name) => name.clone(),
+            None => {
+                let ts = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+                format!("assume-role-{}", ts)
+            }
+        }
     }
 
     pub fn determine_credential_file(&self) -> Result<PathBuf> {

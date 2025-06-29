@@ -7,9 +7,9 @@ use aws_sdk_sts::types::PolicyDescriptorType;
 use aws_sdk_sts::Client;
 use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
 use aws_smithy_types::{date_time::Format, DateTime};
+use hyper::client::HttpConnector;
 use std::fs;
 use std::time::{Duration, SystemTime};
-use hyper::client::HttpConnector;
 // use aws_smithy_runtime_api::client::behavior_version::BehaviorVersion;
 // use aws_smithy_runtime_api::client::http::HttpConnector;
 use serde::{Deserialize, Serialize};
@@ -49,8 +49,7 @@ impl CredentialProcessOutput {
 fn credentials_valid(output: &CredentialProcessOutput) -> Result<bool> {
     let expiration = DateTime::from_str(&output.Expiration, Format::DateTime)
         .context("failed to parse cached credential expiration")?;
-    let expiration = SystemTime::try_from(expiration)
-        .context("expiration time out of range")?;
+    let expiration = SystemTime::try_from(expiration).context("expiration time out of range")?;
     if let Ok(time_left) = expiration.duration_since(SystemTime::now()) {
         Ok(time_left > Duration::from_secs(300))
     } else {
@@ -192,6 +191,6 @@ fn build_assume_role_request(client: Client, cmdline: &Cmdline) -> AssumeRoleFlu
     }
 
     builder = builder.role_arn(&cmdline.role_arn);
-    builder = builder.role_session_name(&cmdline.session_name);
+    builder = builder.role_session_name(&cmdline.session_name());
     builder
 }
