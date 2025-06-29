@@ -6,10 +6,13 @@ use aws_sdk_sts::operation::assume_role::builders::AssumeRoleFluentBuilder;
 use aws_sdk_sts::types::PolicyDescriptorType;
 use aws_sdk_sts::Client;
 use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
+use aws_smithy_types::{date_time::Format, DateTime};
+use std::fs;
+use std::time::{Duration, SystemTime};
 use hyper::client::HttpConnector;
 // use aws_smithy_runtime_api::client::behavior_version::BehaviorVersion;
 // use aws_smithy_runtime_api::client::http::HttpConnector;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use hyper::Uri;
 use hyper_proxy::{Intercept, Proxy, ProxyConnector};
@@ -21,7 +24,7 @@ use crate::settings::Cmdline;
 mod credential_file;
 mod settings;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[allow(non_snake_case)]
 struct CredentialProcessOutput {
     Version: i32,
@@ -43,6 +46,18 @@ impl CredentialProcessOutput {
     }
 }
 
+fn credentials_valid(output: &CredentialProcessOutput) -> Result<bool> {
+    let expiration = DateTime::from_str(&output.Expiration, Format::DateTime)
+        .context("failed to parse cached credential expiration")?;
+    let expiration = SystemTime::try_from(expiration)
+        .context("expiration time out of range")?;
+    if let Ok(time_left) = expiration.duration_since(SystemTime::now()) {
+        Ok(time_left > Duration::from_secs(300))
+    } else {
+        Ok(false)
+    }
+}
+
 macro_rules! vprintln {
     ($cmdline:expr, $($arg:tt)*) => {
         if $cmdline.verbose {
@@ -60,6 +75,19 @@ async fn main() -> Result<()> {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::new("trace"))
             .init();
+    }
+
+    if cmdline.credential_process {
+        if let Some(cache_file) = &cmdline.credential_process_cache {
+            if let Ok(contents) = fs::read_to_string(cache_file) {
+                if let Ok(cached) = serde_json::from_str::<CredentialProcessOutput>(&contents) {
+                    if credentials_valid(&cached)? {
+                        println!("{}", contents.trim());
+                        return Ok(());
+                    }
+                }
+            }
+        }
     }
 
     vprintln!(&cmdline, "Assuming role {}", cmdline.role_arn);
@@ -84,6 +112,10 @@ async fn main() -> Result<()> {
 
     if cmdline.credential_process {
         let output = CredentialProcessOutput::from_credentials(credentials);
+        if let Some(cache_file) = &cmdline.credential_process_cache {
+            fs::write(cache_file, serde_json::to_string(&output)?)
+                .context("failed to write credential cache")?;
+        }
         println!(
             "{}",
             serde_json::to_string(&output).context("failed to serialize credentials")?

@@ -68,6 +68,10 @@ pub struct Cmdline {
     #[structopt(name = "credential-process", long)]
     pub credential_process: bool,
 
+    /// Cache file when using --credential-process
+    #[structopt(name = "credential-process-cache", long)]
+    pub credential_process_cache: Option<String>,
+
     /// Enable verbose output
     #[structopt(short, long)]
     pub verbose: bool,
