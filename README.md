@@ -1,7 +1,7 @@
 assume-role
 ===========
 
-A really simple program to assume an IAM Role (by calling [AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html)) and saving the resulting credentials back to your local [credential file](https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html) (`~/.aws/credentials` by default).
+A really simple program to assume an IAM Role (by calling [AssumeRole](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html)) and save the resulting credentials back to your local [credential file](https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html) (`~/.aws/credentials` by default). It can also output credentials in the [Process Credential Provider](https://docs.aws.amazon.com/sdkref/latest/guide/feature-process-credentials.html) format using `--credential-process`.
 
 Building
 --------
@@ -37,6 +37,7 @@ OPTIONS:
         --policy-json <policy-json>                Inline session policy JSON
     -p, --profile <profile>                        AWS Profile to use when calling assume-role
         --proxy <proxy>                            Proxy URL
+        --credential-process                       Print credentials in Process Credential Provider format instead of saving to a file
         --region <region>
             AWS Region for STS endpoint [env: AWS_DEFAULT_REGION=]  [default: us-east-1]
 
