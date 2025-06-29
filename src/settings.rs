@@ -81,7 +81,7 @@ impl Cmdline {
     pub fn determine_credential_file(&self) -> Result<PathBuf> {
         Ok(match &self.credential_file {
             Some(filename) => PathBuf::from_str(filename)
-                .with_context(|| format!("bad credential file path: {}", filename))?,
+                .with_context(|| format!("bad credential file path: {filename}"))?,
             None => {
                 let mut path = PathBuf::new();
                 path.push(

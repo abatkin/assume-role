@@ -116,7 +116,7 @@ async fn build_sts_client(cmdline: &Cmdline) -> Result<Client> {
             Uri::try_from(proxy_uri).context("invalid proxy_uri")?,
         );
         let connector = HttpConnector::new();
-        let proxy_connector = ProxyConnector::from_proxy(connector, proxy).unwrap();
+        let proxy_connector = ProxyConnector::from_proxy(connector, proxy)?;
         let http_client = HyperClientBuilder::new().build(proxy_connector);
         sts_config_builder = sts_config_builder.http_client(http_client);
     }

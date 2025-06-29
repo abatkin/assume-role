@@ -54,6 +54,9 @@ mod tests {
         let tmp = std::env::temp_dir().join("assume_role_test_missing.ini");
         let _ = fs::remove_file(&tmp);
         let cred = CredentialFile::load(&tmp).expect("load should succeed");
-        assert!(cred.ini.section(None::<String>).is_none());
+        assert_eq!(1, cred.ini.sections().count());
+        assert!(cred.ini.section(Option::<String>::None).is_some());
+        let section = cred.ini.section(Option::<String>::None).unwrap();
+        assert_eq!(0, section.len());
     }
 }
