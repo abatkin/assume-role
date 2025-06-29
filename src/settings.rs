@@ -67,6 +67,10 @@ pub struct Cmdline {
     #[structopt(name = "proxy", long)]
     pub proxy: Option<String>,
 
+    /// Print credentials in Process Credential Provider format instead of saving to a file
+    #[structopt(name = "credential-process", long)]
+    pub credential_process: bool,
+
     /// Enable verbose output
     #[structopt(short, long)]
     pub verbose: bool,

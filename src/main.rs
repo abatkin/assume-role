@@ -52,9 +52,24 @@ async fn main() -> Result<()> {
         .credentials()
         .with_context(|| "no credentials in response")?;
 
-    let mut credential_file = CredentialFile::load(&credential_filename)?;
-    credential_file.set_credentials(&cmdline.dest_profile, credentials);
-    credential_file.save(&credential_filename)?;
+    if cmdline.credential_process {
+        let expiration = credentials
+            .expiration()
+            .map(|e| e.to_string())
+            .unwrap_or_default();
+        let output = serde_json::json!({
+            "Version": 1,
+            "AccessKeyId": credentials.access_key_id(),
+            "SecretAccessKey": credentials.secret_access_key(),
+            "SessionToken": credentials.session_token(),
+            "Expiration": expiration,
+        });
+        println!("{}", output);
+    } else {
+        let mut credential_file = CredentialFile::load(&credential_filename)?;
+        credential_file.set_credentials(&cmdline.dest_profile, credentials);
+        credential_file.save(&credential_filename)?;
+    }
 
     Ok(())
 }
