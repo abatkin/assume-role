@@ -10,6 +10,7 @@ structopt = "0.3"
 aws-config = "1"
 aws-sdk-sts = "1"
 aws-smithy-runtime = { version = "1", features = ["connector-hyper-0-14-x", "client"] }
+aws-smithy-types = "1"
 tokio = { version = "1", features = ["full"] }
 hyper = { version = "0.14", features = ["client"] }
 hyper-proxy = "0.9"

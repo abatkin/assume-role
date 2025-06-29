@@ -49,6 +49,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-sts",
  "aws-smithy-runtime",
+ "aws-smithy-types",
  "directories",
  "hyper 0.14.32",
  "hyper-proxy",
