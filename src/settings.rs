@@ -17,10 +17,7 @@ pub struct Cmdline {
     pub profile: Option<String>,
 
     /// AWS Region for STS endpoint
-    #[structopt(
-        name = "region",
-        long,
-    )]
+    #[structopt(name = "region", long)]
     pub region: Option<String>,
 
     /// Lifetime in seconds for temporary credentials (AWS default is 3600 = 1 hour)

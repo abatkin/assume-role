@@ -1,5 +1,5 @@
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use aws_sdk_sts::types::Credentials;

@@ -1,10 +1,10 @@
 use anyhow::{Context, Result};
-use aws_config::BehaviorVersion;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_sts::Client;
+use aws_config::BehaviorVersion;
 use aws_sdk_sts::config::Region;
 use aws_sdk_sts::operation::assume_role::builders::AssumeRoleFluentBuilder;
 use aws_sdk_sts::types::PolicyDescriptorType;
+use aws_sdk_sts::Client;
 use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
 use hyper::client::HttpConnector;
 // use aws_smithy_runtime_api::client::behavior_version::BehaviorVersion;
@@ -66,10 +66,17 @@ async fn main() -> Result<()> {
 
     let sts_client = build_sts_client(&cmdline).await?;
     let assume_role_request = build_assume_role_request(sts_client, &cmdline);
-    let result = assume_role_request.send().await.context("assume role failed")?;
+    let result = assume_role_request
+        .send()
+        .await
+        .context("assume role failed")?;
 
     let credential_filename = cmdline.determine_credential_file()?;
-    vprintln!(&cmdline, "Assume role succeeded, saving credentials to {}", credential_filename.display());
+    vprintln!(
+        &cmdline,
+        "Assume role succeeded, saving credentials to {}",
+        credential_filename.display()
+    );
 
     let credentials = result
         .credentials()
@@ -77,7 +84,10 @@ async fn main() -> Result<()> {
 
     if cmdline.credential_process {
         let output = CredentialProcessOutput::from_credentials(credentials);
-        println!("{}", serde_json::to_string(&output).context("failed to serialize credentials")?);
+        println!(
+            "{}",
+            serde_json::to_string(&output).context("failed to serialize credentials")?
+        );
     } else {
         let mut credential_file = CredentialFile::load(&credential_filename)?;
         credential_file.set_credentials(&cmdline.dest_profile, credentials);
@@ -101,7 +111,10 @@ async fn build_sts_client(cmdline: &Cmdline) -> Result<Client> {
 
     let mut sts_config_builder = aws_sdk_sts::config::Builder::from(&config);
     if let Some(proxy_uri) = &cmdline.proxy {
-        let proxy = Proxy::new(Intercept::All, Uri::try_from(proxy_uri).context("invalid proxy_uri")?);
+        let proxy = Proxy::new(
+            Intercept::All,
+            Uri::try_from(proxy_uri).context("invalid proxy_uri")?,
+        );
         let connector = HttpConnector::new();
         let proxy_connector = ProxyConnector::from_proxy(connector, proxy).unwrap();
         let http_client = HyperClientBuilder::new().build(proxy_connector);
@@ -114,7 +127,6 @@ async fn build_sts_client(cmdline: &Cmdline) -> Result<Client> {
 }
 
 fn build_assume_role_request(client: Client, cmdline: &Cmdline) -> AssumeRoleFluentBuilder {
-
     let mut builder = client.assume_role();
 
     if let Some(duration_seconds) = cmdline.duration {
@@ -135,7 +147,11 @@ fn build_assume_role_request(client: Client, cmdline: &Cmdline) -> AssumeRoleFlu
 
     if let Some(policy_arns) = &cmdline.policies {
         for policy_arn in policy_arns {
-            builder = builder.policy_arns(PolicyDescriptorType::builder().arn(policy_arn.clone()).build());
+            builder = builder.policy_arns(
+                PolicyDescriptorType::builder()
+                    .arn(policy_arn.clone())
+                    .build(),
+            );
         }
     }
 
