@@ -9,6 +9,7 @@ use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
 use hyper::client::HttpConnector;
 // use aws_smithy_runtime_api::client::behavior_version::BehaviorVersion;
 // use aws_smithy_runtime_api::client::http::HttpConnector;
+use serde::Serialize;
 
 use hyper::Uri;
 use hyper_proxy::{Intercept, Proxy, ProxyConnector};
@@ -19,6 +20,28 @@ use crate::settings::Cmdline;
 
 mod credential_file;
 mod settings;
+
+#[derive(Serialize)]
+#[allow(non_snake_case)]
+struct CredentialProcessOutput {
+    Version: i32,
+    AccessKeyId: String,
+    SecretAccessKey: String,
+    SessionToken: String,
+    Expiration: String,
+}
+
+impl CredentialProcessOutput {
+    fn from_credentials(credentials: &aws_sdk_sts::types::Credentials) -> Self {
+        CredentialProcessOutput {
+            Version: 1,
+            AccessKeyId: credentials.access_key_id().to_string(),
+            SecretAccessKey: credentials.secret_access_key().to_string(),
+            SessionToken: credentials.session_token().to_string(),
+            Expiration: credentials.expiration().to_string(),
+        }
+    }
+}
 
 macro_rules! vprintln {
     ($cmdline:expr, $($arg:tt)*) => {
@@ -53,15 +76,8 @@ async fn main() -> Result<()> {
         .with_context(|| "no credentials in response")?;
 
     if cmdline.credential_process {
-        let expiration = credentials.expiration().to_string();
-        let output = serde_json::json!({
-            "Version": 1,
-            "AccessKeyId": credentials.access_key_id(),
-            "SecretAccessKey": credentials.secret_access_key(),
-            "SessionToken": credentials.session_token(),
-            "Expiration": expiration,
-        });
-        println!("{}", output);
+        let output = CredentialProcessOutput::from_credentials(credentials);
+        println!("{}", serde_json::to_string(&output).context("failed to serialize credentials")?);
     } else {
         let mut credential_file = CredentialFile::load(&credential_filename)?;
         credential_file.set_credentials(&cmdline.dest_profile, credentials);

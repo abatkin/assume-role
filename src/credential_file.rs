@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::fs;
 
 use anyhow::{Context, Result};
 use aws_sdk_sts::types::Credentials;
@@ -11,7 +12,7 @@ pub struct CredentialFile {
 impl CredentialFile {
     pub fn load<P: AsRef<Path>>(filename: P) -> Result<CredentialFile> {
         let path = filename.as_ref();
-        let ini = if !path.exists() {
+        let ini = if fs::metadata(path).is_err() {
             Ini::new()
         } else {
             match Ini::load_from_file(path) {
